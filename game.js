@@ -2,20 +2,31 @@ window.addEventListener('resize', () => {
     window.location.reload()
 }); //update size of game depending on size of screen
 
+const scoreText = document.getElementById('scoreText');
+const livesText = document.getElementById('livesText');
+
 const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
-var gameHeight = window.innerHeight;
-var gameWidth = window.innerWidth;
+
 var playerGravity = .5;
 var playerJump = -15
 
+var gameHeight = window.innerHeight;
+var gameWidth = window.innerWidth;
 canvas.width = gameWidth;
 canvas.height = gameHeight;
 
-const scaledCanvas = {
-    width: canvas.width / 2,
+
+var score = 0;
+var lives = 3;
+
+scoreText.innerText = 'Score: ' + score;
+livesText.innerText = 'Lives: ' + lives;
+
+ const scaledCanvas = {
+    width: canvas.width / 1,
     height: canvas.height / 2
-}
+} 
 
 class Platform {
     constructor({ x, y, imageSrc }) {
@@ -148,7 +159,7 @@ function animate() {
     c.clearRect(0, 0, canvas.width, canvas.height)
 
     c.fillStyle = "lightblue"
-    c.fillRect(0, 0, canvas.width, canvas.height)
+    c.fillRect(0, 0, canvas.width, gameHeight.height)
 
     c.save()
     c.scale(1, 2)
