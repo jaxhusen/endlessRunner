@@ -29,15 +29,18 @@ class Platform {
         }
         this.width = 200,
             this.height = 50
-            this.image = new Image()
-            this.image.src = imageSrc
+        this.image = new Image()
+        this.image.src = imageSrc
     }
     draw() {
         c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height)
     }
 }
 
-class Sprite {
+
+
+
+class Background {
     constructor({ position, imageSrc }) {
         this.position = position
         this.image = new Image()
@@ -53,13 +56,8 @@ class Sprite {
         this.draw()
     }
 }
-const background = new Sprite({
-    position: {
-        x: 0,
-        y: 0
-    },
-    imageSrc: './uploads/bg.jpg'
-})
+
+
 
 class Player {
     constructor(position) {
@@ -68,6 +66,7 @@ class Player {
             x: 0,
             y: 0
         }
+        this.speed = 5
         this.height = 50
         this.width = 50
     }
@@ -82,16 +81,40 @@ class Player {
 
         if (this.position.y + this.height + this.velocity.y <= canvas.height) {
             this.velocity.y += playerGravity
-        } else {
-            this.velocity.y = 0
         }
     }
 }
 
-const player = new Player({
+
+var platforms = [/* new Platform({
+    x: 0,
+    y: 500,
+    imageSrc: '/uploads/grass.png'
+}),
+new Platform({
+    x: 300,
+    y: 600,
+    imageSrc: '/uploads/grass.png'
+}),
+new Platform({
+    x: 600,
+    y: 700,
+    imageSrc: '/uploads/grass.png'
+}) */];
+
+var backgrounds = [/* new Background({
+    position: {
+        x: -1,
+        y: -1
+    },
+    imageSrc: './uploads/bg.jpg'
+}) */];
+
+var player = new Player({
     x: 50,
     y: 0
-})
+});
+
 const keys = {
     right: {
         pressed: false
@@ -99,11 +122,53 @@ const keys = {
     left: {
         pressed: false
     },
-}
-
+};
 var scrollOffset = 0;
 
-const platforms = [new Platform({x: 0, y: 500, imageSrc: '/uploads/grass.png'}), new Platform({x: 300, y: 300, imageSrc: '/uploads/grass.png'})]
+
+function init() {
+    platforms = [new Platform({
+        x: 0,
+        y: 500,
+        imageSrc: '/uploads/grass.png'
+    }),
+    new Platform({
+        x: 300,
+        y: 600,
+        imageSrc: '/uploads/grass.png'
+    }),
+    new Platform({
+        x: 600,
+        y: 700,
+        imageSrc: '/uploads/grass.png'
+    }),
+    new Platform({
+        x: 900,
+        y: 700,
+        imageSrc: '/uploads/grass.png'
+    }),
+    new Platform({
+        x: 1200,
+        y: 500,
+        imageSrc: '/uploads/grass.png'
+    })];
+
+    backgrounds = [new Background({
+        position: {
+            x: -1,
+            y: -1
+        },
+        imageSrc: './uploads/bg.jpg'
+    })];
+
+    player = new Player({
+        x: 50,
+        y: 0
+    });
+    scrollOffset = 0;
+}
+
+
 
 function animate() {
     window.requestAnimationFrame(animate)
@@ -114,8 +179,10 @@ function animate() {
 
     c.save()
     c.scale(1, 2)
-    c.translate(0, - background.image.height + scaledCanvas.height)
-    background.update()
+    c.translate(0, - backgrounds[0].image.height + scaledCanvas.height)
+    backgrounds.forEach(background => {
+        background.update()
+    })
     c.restore()
     player.update()
     platforms.forEach(platform => {
@@ -123,27 +190,33 @@ function animate() {
     })
 
 
-
-
-
     if (keys.right.pressed && player.position.x < 200) {
-        player.velocity.x = 5
-    } else if (keys.left.pressed && player.position.x > 100) {
-        player.velocity.x = -5
+        player.velocity.x = player.speed
+    } else if ((keys.left.pressed && player.position.x > 100) ||
+                keys.left.pressed && scrollOffset == 0 &&
+                player.position.x > 0) {
+        player.velocity.x = -player.speed
     }
     else {
         player.velocity.x = 0
     }
 
+
     if (keys.right.pressed) {
-        scrollOffset += 5
+        scrollOffset += player.speed
         platforms.forEach(platform => {
-            platform.position.x -= 5
+            platform.position.x -= player.speed
         })
-    } else if (keys.left.pressed) {
+        backgrounds.forEach(background => {
+            background.position.x -= player.speed * .66
+        })
+    } else if (keys.left.pressed && scrollOffset > 0) {
         scrollOffset -= 5
         platforms.forEach(platform => {
-            platform.position.x += 5
+            platform.position.x += player.speed
+        })
+        backgrounds.forEach(background => {
+            background.position.x += player.speed * .66
         })
     }
 
@@ -160,11 +233,16 @@ function animate() {
         }
     })
 
-    if(scrollOffset > 2000){
+    if (scrollOffset > 2000) {
         console.log('YOU WINNNNN')
+    }
+    if (player.position.y > canvas.height) {
+        console.log('you loooooseee')
+        init()
     }
 }
 
+init()
 animate()
 
 window.addEventListener('keydown', ({ keyCode }) => {
