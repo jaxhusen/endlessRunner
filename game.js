@@ -2,16 +2,12 @@ window.addEventListener('resize', () => {
     window.location.reload()
 }); //update size of game depending on size of screen
 
-
-
 const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
 var gameHeight = window.innerHeight;
 var gameWidth = window.innerWidth;
 var playerGravity = .5;
 var playerJump = -15
-
-
 
 canvas.width = gameWidth;
 canvas.height = gameHeight;
@@ -36,8 +32,6 @@ class Platform {
         c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height)
     }
 }
-
-
 
 
 class Background {
@@ -86,29 +80,8 @@ class Player {
 }
 
 
-var platforms = [/* new Platform({
-    x: 0,
-    y: 500,
-    imageSrc: '/uploads/grass.png'
-}),
-new Platform({
-    x: 300,
-    y: 600,
-    imageSrc: '/uploads/grass.png'
-}),
-new Platform({
-    x: 600,
-    y: 700,
-    imageSrc: '/uploads/grass.png'
-}) */];
-
-var backgrounds = [/* new Background({
-    position: {
-        x: -1,
-        y: -1
-    },
-    imageSrc: './uploads/bg.jpg'
-}) */];
+var platforms = [];
+var backgrounds = [];
 
 var player = new Player({
     x: 50,
@@ -155,8 +128,8 @@ function init() {
 
     backgrounds = [new Background({
         position: {
-            x: -1,
-            y: -1
+            x: 0,
+            y: 0
         },
         imageSrc: './uploads/bg.jpg'
     })];
@@ -208,7 +181,7 @@ function animate() {
             platform.position.x -= player.speed
         })
         backgrounds.forEach(background => {
-            background.position.x -= player.speed * .66
+            background.position.x -= player.speed
         })
     } else if (keys.left.pressed && scrollOffset > 0) {
         scrollOffset -= 5
@@ -216,7 +189,7 @@ function animate() {
             platform.position.x += player.speed
         })
         backgrounds.forEach(background => {
-            background.position.x += player.speed * .66
+            background.position.x += player.speed
         })
     }
 
