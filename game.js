@@ -45,7 +45,6 @@ class Platform {
     }
 }
 
-
 class Player {
     constructor(position) {
         this.position = position
@@ -86,6 +85,9 @@ const keys = {
     left: {
         pressed: false
     },
+    down: {
+        pressed: false
+    }
 };
 var scrollOffset = 0;
 
@@ -121,6 +123,7 @@ function init() {
         y: 0
     });
     scrollOffset = 0;
+    keys.down.pressed = false;
 }
 
 function animate() {
@@ -139,26 +142,17 @@ function animate() {
 
     if (keys.right.pressed && player.position.x < 200) {
         player.velocity.x = player.speed
-    } else if ((keys.left.pressed && player.position.x > 100) ||
-        keys.left.pressed && scrollOffset == 0 &&
-        player.position.x > 0) {
-        player.velocity.x = -player.speed
-    }
+    } 
     else {
         player.velocity.x = 0
     }
 
-    if (keys.right.pressed) {
+    if (keys.down.pressed) {
         scrollOffset += player.speed
         platforms.forEach(platform => {
             platform.position.x -= player.speed
         })
-    } else if (keys.left.pressed && scrollOffset > 0) {
-        scrollOffset -= 5
-        platforms.forEach(platform => {
-            platform.position.x += player.speed
-        })
-    }
+    } 
 
     //platform collision detection
     platforms.forEach(platform => {
@@ -169,7 +163,7 @@ function animate() {
             player.position.x + player.width >=
             platform.position.x && player.position.x <=
             platform.position.x + platform.width) {
-            player.velocity.y = -15
+            player.velocity.y = -15                     //bounce when player hits platform
         }
     })
     score = scrollOffset;
@@ -192,44 +186,18 @@ function animate() {
 init()
 animate()
 
-window.addEventListener('keydown', ({ keyCode }) => {
-    switch (keyCode) {
-        case 65:
-            player.velocity.x -= 1
-            keys.left.pressed = true;
-            console.log('left')
-            break
-        case 68:
-            player.velocity.x += 1
-            keys.right.pressed = true;
-            console.log('right')
-            break
-        case 87:
-            player.velocity.y = playerJump
-            break
-    }
-})
-
-window.addEventListener('keyup', ({ keyCode }) => {
-    switch (keyCode) {
-        case 65:
-            player.velocity.x = 0
-            keys.left.pressed = false;
-            break
-        case 68:
-            player.velocity.x = 0;
-            keys.right.pressed = false;
-            break
-        case 87:
-            player.velocity.y = playerJump
-            break
-    }
-})
 
 window.addEventListener('pointerdown', (event) => {
-    player.velocity.y = playerJump
-    console.log(event)
-})
+    player.velocity.x += 1
+    keys.down.pressed = true;
+    console.log('pressed')
+}) 
+
+window.addEventListener('pointerup', (event) => {
+    player.velocity.x = 0
+    keys.down.pressed = false;
+    console.log('up')
+})  
 
 window.addEventListener('touch', (event) => {
     player.velocity.y = playerJump
