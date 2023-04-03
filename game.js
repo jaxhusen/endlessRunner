@@ -16,17 +16,18 @@ var gameWidth = window.innerWidth;
 canvas.width = gameWidth;
 canvas.height = gameHeight;
 
-
 var score = 0;
 var lives = 3;
+
+var scoreToWin = 1000;
 
 scoreText.innerText = 'Score: ' + score;
 livesText.innerText = 'Lives: ' + lives;
 
- const scaledCanvas = {
+const scaledCanvas = {
     width: canvas.width / 1,
     height: canvas.height / 2
-} 
+}
 
 class Platform {
     constructor({ x, y, imageSrc }) {
@@ -43,25 +44,6 @@ class Platform {
         c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height)
     }
 }
-
-
-class Background {
-    constructor({ position, imageSrc }) {
-        this.position = position
-        this.image = new Image()
-        this.image.src = imageSrc
-    }
-    draw() {
-        if (!this.image) {
-            return
-        }
-        c.drawImage(this.image, this.position.x, this.position.y)
-    }
-    update() {
-        this.draw()
-    }
-}
-
 
 
 class Player {
@@ -90,9 +72,7 @@ class Player {
     }
 }
 
-
 var platforms = [];
-var backgrounds = [];
 
 var player = new Player({
     x: 50,
@@ -108,7 +88,6 @@ const keys = {
     },
 };
 var scrollOffset = 0;
-
 
 function init() {
     platforms = [new Platform({
@@ -137,14 +116,6 @@ function init() {
         imageSrc: '/uploads/grass.png'
     })];
 
-    backgrounds = [new Background({
-        position: {
-            x: 0,
-            y: 0
-        },
-        imageSrc: './uploads/bg.jpg'
-    })];
-
     player = new Player({
         x: 50,
         y: 0
@@ -152,55 +123,40 @@ function init() {
     scrollOffset = 0;
 }
 
-
-
 function animate() {
     window.requestAnimationFrame(animate)
-    c.clearRect(0, 0, canvas.width, canvas.height)
+    // Clear canvas
+    c.clearRect(0, 0, gameWidth, gameHeight);
 
     c.fillStyle = "lightblue"
     c.fillRect(0, 0, canvas.width, gameHeight.height)
 
-    c.save()
-    c.scale(1, 2)
-    c.translate(0, - backgrounds[0].image.height + scaledCanvas.height)
-    backgrounds.forEach(background => {
-        background.update()
-    })
     c.restore()
     player.update()
     platforms.forEach(platform => {
         platform.draw()
     })
 
-
     if (keys.right.pressed && player.position.x < 200) {
         player.velocity.x = player.speed
     } else if ((keys.left.pressed && player.position.x > 100) ||
-                keys.left.pressed && scrollOffset == 0 &&
-                player.position.x > 0) {
+        keys.left.pressed && scrollOffset == 0 &&
+        player.position.x > 0) {
         player.velocity.x = -player.speed
     }
     else {
         player.velocity.x = 0
     }
 
-
     if (keys.right.pressed) {
         scrollOffset += player.speed
         platforms.forEach(platform => {
             platform.position.x -= player.speed
         })
-        backgrounds.forEach(background => {
-            background.position.x -= player.speed
-        })
     } else if (keys.left.pressed && scrollOffset > 0) {
         scrollOffset -= 5
         platforms.forEach(platform => {
             platform.position.x += player.speed
-        })
-        backgrounds.forEach(background => {
-            background.position.x += player.speed
         })
     }
 
@@ -213,16 +169,23 @@ function animate() {
             player.position.x + player.width >=
             platform.position.x && player.position.x <=
             platform.position.x + platform.width) {
-            player.velocity.y = 0
+            player.velocity.y = -15
         }
     })
+    score = scrollOffset;
+    scoreText.innerText = 'Score: ' + score;
 
-    if (scrollOffset > 2000) {
+    if (score > scoreToWin) {
         console.log('YOU WINNNNN')
     }
     if (player.position.y > canvas.height) {
-        console.log('you loooooseee')
-        init()
+        lives--;
+        livesText.innerText = 'Lives: ' + lives;
+        if (lives > 0) {
+            init()
+        }else{
+            livesText.innerText = 'Lives: ' + 0;
+        }
     }
 }
 

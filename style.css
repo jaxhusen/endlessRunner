@@ -3,7 +3,11 @@
     padding: 0;
 }
 
-
+body{
+  background-image: url(/uploads/bg.jpg);
+  background-repeat: repeat-x;
+  background-size: cover;
+}
 
 .containerLivesScore {
     display: flex;
