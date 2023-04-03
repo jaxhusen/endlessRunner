@@ -9,7 +9,7 @@ const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
 
 var playerGravity = .5;
-var playerJump = -15
+var playerJump = -10
 
 var gameHeight = window.innerHeight;
 var gameWidth = window.innerWidth;
@@ -17,17 +17,15 @@ canvas.width = gameWidth;
 canvas.height = gameHeight;
 
 var score = 0;
-var lives = 3;
+var lives = 1;
 
 var scoreToWin = 1000;
 
 scoreText.innerText = 'Score: ' + score;
 livesText.innerText = 'Lives: ' + lives;
 
-const scaledCanvas = {
-    width: canvas.width / 1,
-    height: canvas.height / 2
-}
+
+var platforms = [];
 
 class Platform {
     constructor({ x, y, imageSrc }) {
@@ -71,12 +69,11 @@ class Player {
     }
 }
 
-var platforms = [];
-
 var player = new Player({
     x: 50,
     y: 0
 });
+
 
 const keys = {
     right: {
@@ -89,34 +86,25 @@ const keys = {
         pressed: false
     }
 };
+
 var scrollOffset = 0;
+platforms = [];
 
 function init() {
-    platforms = [new Platform({
+    platforms.push(new Platform({
         x: 0,
         y: 500,
         imageSrc: '/uploads/grass.png'
-    }),
-    new Platform({
-        x: 300,
-        y: 600,
-        imageSrc: '/uploads/grass.png'
-    }),
-    new Platform({
-        x: 600,
-        y: 700,
-        imageSrc: '/uploads/grass.png'
-    }),
-    new Platform({
-        x: 900,
-        y: 700,
-        imageSrc: '/uploads/grass.png'
-    }),
-    new Platform({
-        x: 1200,
-        y: 500,
-        imageSrc: '/uploads/grass.png'
-    })];
+    }));
+
+
+    for (var i = 1; i < 10; i++) {
+        platforms.push(new Platform({
+            x: i * 300,
+            y: Math.random() * (800 - 500) + 200,
+            imageSrc: '/uploads/grass.png'
+        }))
+    }
 
     player = new Player({
         x: 50,
@@ -130,11 +118,8 @@ function animate() {
     window.requestAnimationFrame(animate)
     // Clear canvas
     c.clearRect(0, 0, gameWidth, gameHeight);
-
     c.fillStyle = "lightblue"
-    c.fillRect(0, 0, canvas.width, gameHeight.height)
 
-    c.restore()
     player.update()
     platforms.forEach(platform => {
         platform.draw()
@@ -142,7 +127,7 @@ function animate() {
 
     if (keys.right.pressed && player.position.x < 200) {
         player.velocity.x = player.speed
-    } 
+    }
     else {
         player.velocity.x = 0
     }
@@ -152,7 +137,7 @@ function animate() {
         platforms.forEach(platform => {
             platform.position.x -= player.speed
         })
-    } 
+    }
 
     //platform collision detection
     platforms.forEach(platform => {
@@ -177,10 +162,13 @@ function animate() {
         livesText.innerText = 'Lives: ' + lives;
         if (lives > 0) {
             init()
-        }else{
+        }else {
             livesText.innerText = 'Lives: ' + 0;
         }
-    }
+    }/* else if (player.position.x < platform.position.x) {
+        console.log("dieee")
+
+    } */
 }
 
 init()
@@ -189,17 +177,15 @@ animate()
 
 window.addEventListener('pointerdown', (event) => {
     player.velocity.x += 1
+    player.velocity.y = playerJump
     keys.down.pressed = true;
-    console.log('pressed')
-}) 
+})
 
 window.addEventListener('pointerup', (event) => {
     player.velocity.x = 0
     keys.down.pressed = false;
-    console.log('up')
-})  
+})
 
 window.addEventListener('touch', (event) => {
     player.velocity.y = playerJump
-    console.log(event)
 })
