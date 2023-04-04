@@ -1,34 +1,33 @@
-*{
-    margin: 0;
-    padding: 0;
+* {
+  margin: 0;
+  padding: 0;
 }
 
-body{
+body {
   background-image: url(/uploads/bg.jpg);
   background-repeat: repeat-x;
   background-size: cover;
 }
 
 .containerLivesScore {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 
-  }
-  
-  #scoreText {
-    color: green;
-    font-size: 20px;
-    left: 0;
-    z-index: 55;
+}
 
-  }
-  
-  #livesText {
+#scoreText {
+  color: green;
+  font-size: 20px;
+  left: 0;
+  z-index: 55;
 
-    right: 0;
-    color: green;
-    font-size: 20px;
-    text-align: right;
-    z-index: 55;
-  }
+}
+
+#livesText {
+  right: 0;
+  color: green;
+  font-size: 20px;
+  text-align: right;
+  z-index: 55;
+}

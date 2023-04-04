@@ -19,9 +19,10 @@ canvas.height = gameHeight;
 var score = 0;
 var lives = 1;
 
-var scoreToWin = 1000;
+var scoreToWin = 1000;          //point to win if we use scrollOffset insted of platforms
 var platforms = [];
-var platformsWinNum = 10;
+var stars = [];                 // array to store star positions
+var platformsWinNum = 10;       //total number of platforms and points to win
 
 
 
@@ -36,13 +37,27 @@ class Platform {
             y: y
         }
         this.width = 200,
-        this.height = 50
+            this.height = 50
         this.image = new Image()
         this.image.src = imageSrc
         this.jumpedOn = false;  // new property to track if platform has been touched
+/*         this.stars = [];  // array to store star positions
+        for (let i = 0; i < 1; i++) {
+            this.stars.push({
+                x: this.position.x + Math.random() * this.width,
+                y: this.position.y - 30 - Math.random() * 20
+            });
+        } */
     }
     draw() {
         c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height)
+/*         for (let i = 0; i < this.stars.length; i++) {
+            c.fillStyle = 'yellow';
+            c.beginPath();
+            c.arc(this.stars[i].x, this.stars[i].y, 10, 0, Math.PI * 2);
+            c.fill(); 
+            
+        }*/
     }
 }
 
@@ -72,10 +87,13 @@ class Player {
     }
 }
 
+
+
 var player = new Player({
     x: 50,
     y: 0
 });
+
 
 const keys = {
     right: {
@@ -90,7 +108,7 @@ const keys = {
 };
 
 var scrollOffset = 0;
-platforms = [];
+//platforms = [];
 
 function init() {
     platforms.push(new Platform({
@@ -113,6 +131,8 @@ function init() {
     });
     scrollOffset = 0;
     keys.down.pressed = false;
+
+
 }
 
 function animate() {
@@ -120,10 +140,20 @@ function animate() {
     c.clearRect(0, 0, gameWidth, gameHeight);       // Clear canvas
     c.fillStyle = "lightblue"
 
-    player.update()
-    platforms.forEach(platform => {
-        platform.draw()
-    })
+platforms.forEach(platform => {
+  platform.draw();
+
+  // Update position of stars
+  stars.forEach(star => {
+    star.position.x =0;
+    star.draw();
+  });
+});
+
+player.update()
+
+
+
 
     if (keys.right.pressed && player.position.x < 200) {
         player.velocity.x = player.speed
@@ -146,21 +176,21 @@ function animate() {
             player.position.x + player.width >=
             platform.position.x && player.position.x <=
             platform.position.x + platform.width) {
-    
-                if(!platform.jumpedOn){
-                    player.velocity.y = -15; //bounce when player hits platform
-                    platform.jumpedOn = true; // mark platform as touched
-                    score++; // increase score
-                    scoreText.innerText = 'Score: ' + score;
-                }else{
-                    player.velocity.y = -15; //bounce when player hits platform
-                }
+
+            if (!platform.jumpedOn) {
+                player.velocity.y = -15; //bounce when player hits platform
+                platform.jumpedOn = true; // mark platform as touched
+                score++; // increase score
+                scoreText.innerText = 'Score: ' + score;
+            } else {
+                player.velocity.y = -15; //bounce when player hits platform
+            }
         }
     });
 
-if(score == platformsWinNum){
-    console.log("congratttssss")
-}
+    if (score == platformsWinNum) {
+        console.log("congratttssss")
+    }
 
 
 
@@ -173,6 +203,7 @@ if(score == platformsWinNum){
             init()
         } else {
             livesText.innerText = 'Lives: ' + 0;
+            console.log("G A M E O V E R, u scored " + score + ' points')
         }
     }
 }
@@ -191,5 +222,6 @@ window.addEventListener('pointerup', (event) => {
 })
 
 window.addEventListener('touch', (event) => {
-    player.velocity.y = playerJump
+    player.velocity.x += 1
+    keys.down.pressed = true;
 })
