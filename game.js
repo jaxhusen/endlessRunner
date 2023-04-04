@@ -20,12 +20,14 @@ var score = 0;
 var lives = 1;
 
 var scoreToWin = 1000;
+var platforms = [];
+var platformsWinNum = 10;
+
+
+
 
 scoreText.innerText = 'Score: ' + score;
 livesText.innerText = 'Lives: ' + lives;
-
-
-var platforms = [];
 
 class Platform {
     constructor({ x, y, imageSrc }) {
@@ -34,9 +36,10 @@ class Platform {
             y: y
         }
         this.width = 200,
-            this.height = 50
+        this.height = 50
         this.image = new Image()
         this.image.src = imageSrc
+        this.jumpedOn = false;  // new property to track if platform has been touched
     }
     draw() {
         c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height)
@@ -74,7 +77,6 @@ var player = new Player({
     y: 0
 });
 
-
 const keys = {
     right: {
         pressed: false
@@ -97,11 +99,10 @@ function init() {
         imageSrc: '/uploads/grass.png'
     }));
 
-
-    for (var i = 1; i < 10; i++) {
+    for (var i = 1; i < platformsWinNum; i++) {
         platforms.push(new Platform({
             x: i * 300,
-            y: Math.random() * (800 - 500) + 200,
+            y: Math.random() * (500 - 300) + 300,
             imageSrc: '/uploads/grass.png'
         }))
     }
@@ -116,8 +117,7 @@ function init() {
 
 function animate() {
     window.requestAnimationFrame(animate)
-    // Clear canvas
-    c.clearRect(0, 0, gameWidth, gameHeight);
+    c.clearRect(0, 0, gameWidth, gameHeight);       // Clear canvas
     c.fillStyle = "lightblue"
 
     player.update()
@@ -127,19 +127,17 @@ function animate() {
 
     if (keys.right.pressed && player.position.x < 200) {
         player.velocity.x = player.speed
-    }
-    else {
+    } else {
         player.velocity.x = 0
     }
 
-    if (keys.down.pressed) {
+    if (keys.down.pressed && lives > 0) {
         scrollOffset += player.speed
         platforms.forEach(platform => {
             platform.position.x -= player.speed
         })
     }
 
-    //platform collision detection
     platforms.forEach(platform => {
         if (player.position.y + player.height <=
             platform.position.y &&
@@ -148,36 +146,42 @@ function animate() {
             player.position.x + player.width >=
             platform.position.x && player.position.x <=
             platform.position.x + platform.width) {
-            player.velocity.y = -15                     //bounce when player hits platform
+    
+                if(!platform.jumpedOn){
+                    player.velocity.y = -15; //bounce when player hits platform
+                    platform.jumpedOn = true; // mark platform as touched
+                    score++; // increase score
+                    scoreText.innerText = 'Score: ' + score;
+                }else{
+                    player.velocity.y = -15; //bounce when player hits platform
+                }
         }
-    })
-    score = scrollOffset;
-    scoreText.innerText = 'Score: ' + score;
+    });
 
-    if (score > scoreToWin) {
-        console.log('YOU WINNNNN')
-    }
+if(score == platformsWinNum){
+    console.log("congratttssss")
+}
+
+
+
     if (player.position.y > canvas.height) {
         lives--;
         livesText.innerText = 'Lives: ' + lives;
+        keys.down.pressed = false;
+        player.velocity.x = 0
         if (lives > 0) {
             init()
-        }else {
+        } else {
             livesText.innerText = 'Lives: ' + 0;
         }
-    }/* else if (player.position.x < platform.position.x) {
-        console.log("dieee")
-
-    } */
+    }
 }
 
 init()
 animate()
 
-
 window.addEventListener('pointerdown', (event) => {
     player.velocity.x += 1
-    player.velocity.y = playerJump
     keys.down.pressed = true;
 })
 
