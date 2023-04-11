@@ -25,8 +25,10 @@ var stars = [];                 // array to store star positions
 var platformsWinNum = 10;       //total number of platforms and points to win
 
 
+
+/* 
 const starImage = new Image();
-starImage.src = '/uploads/star.png';
+starImage.src = '/uploads/star.png'; */
 
 scoreText.innerText = 'Score: ' + score;
 livesText.innerText = 'Lives: ' + lives;
@@ -36,25 +38,37 @@ class Platform {
         this.position = {
             x: x,
             y: y
-        }
+        };
         this.width = 200;
         this.height = 50;
         this.image = new Image();
         this.image.src = imageSrc;
         this.jumpedOn = false;
-        this.collected = false;
+        this.containsStar = true;
         this.starPosition = {
             x: this.position.x + this.width / 2,
-            y: this.position.y - 30
+            y: this.position.y
+        };
+        //this.starRadius = 10;
+        this.starImage = new Image();
+        this.starImage.src = "/uploads/star.png";
+        if (this.containsStar) {
+            stars.push({
+                position: this.starPosition,
+                image: this.starImage
+            });
         }
-        this.starRadius = 10;
-        stars.push(this.starPosition);
     }
     draw() {
         c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
-        c.drawImage(starImage, this.position.x + this.width / 2 - 10, this.position.y - 30, 20, 20);
-      }
+        if (this.containsStar) {
+            c.drawImage(this.starImage, this.position.x + this.width / 2 - 10, this.position.y - 30, 20, 20);
+        }
+    }
 }
+
+
+
 
 class Player {
     constructor(position) {
@@ -80,8 +94,9 @@ class Player {
             this.velocity.y += playerGravity
         }
     }
-}
 
+
+}
 
 
 var player = new Player({
@@ -108,7 +123,7 @@ function init() {
     platforms.push(new Platform({
         x: 0,
         y: 500,
-        imageSrc: '/uploads/grass.png',
+        imageSrc: '/uploads/grass.png'
     }));
 
     for (var i = 1; i < platformsWinNum; i++) {
@@ -128,14 +143,13 @@ function init() {
 }
 
 
-
-
 function animate() {
     window.requestAnimationFrame(animate)
     c.clearRect(0, 0, gameWidth, gameHeight);       // Clear canvas
     c.fillStyle = "lightblue"
 
     player.update()
+
     if (keys.right.pressed && player.position.x < 200) {
         player.velocity.x = player.speed
     } else {
@@ -158,19 +172,32 @@ function animate() {
             player.position.x + player.width >=
             platform.position.x && player.position.x <=
             platform.position.x + platform.width) {
-    
+
             if (!platform.jumpedOn) {
                 player.velocity.y = -15; //bounce when player hits platform
                 platform.jumpedOn = true; // mark platform as touched
-                if (!platform.collected && platform.checkStarCollision(player.position.x, player.position.y, player.width, player.height)) {
-                    platform.collected = true;
-                    stars = stars.filter(star => star !== platform.starPosition);
+
+                if (platform.containsStar) {
+                    for (let i = 0; i < stars.length; i++) {
+                        const star = stars[i];
+                        platform.containsStar = false;
+                        stars.splice(i, 1); // remove the star from the array
+
+                        score++;
+                        scoreText.innerText = 'Score: ' + score;
+                        break; // exit the loop
+                    }
+                    console.log(stars)
                 }
-            } else {
+
+            } if (!platform.containsStar) {
                 player.velocity.y = -15; //bounce when player hits platform
             }
         }
     });
+
+
+
 
     if (score == platformsWinNum) {
         console.log("congratttssss")
