@@ -29,8 +29,8 @@ var scrollOffset = 0;
 var scoreToWin = 1000;          //point to win if we use scrollOffset insted of platforms
 var platforms = [];
 var stars = [];                 // array to store star positions
-var platformsWinNum = 10;       //total number of platforms and points to win
-
+var platformsNum = 11;       //total number of platforms and points to win
+var winNum = platformsNum - 1;
 
 scoreText.innerText = 'Score: ' + score;
 livesText.innerText = 'Lives: ' + lives;
@@ -41,7 +41,7 @@ class Platform {
             x: x,
             y: y
         };
-        this.width = width; 
+        this.width = width;
         this.height = platformHeight;
         this.image = new Image();
         this.image.src = imageSrc;
@@ -51,7 +51,6 @@ class Platform {
             x: this.position.x,
             y: this.position.y - starHeight
         };
-        this.starRadius = 10;
         this.starImage = new Image();
         this.starImage.src = "/uploads/star.png";
         if (this.containsStar) {
@@ -89,14 +88,34 @@ class Player {
         c.fillStyle = 'green'
         c.fillRect(this.position.x, this.position.y, this.width, this.height)
     }
+
     update() {
         this.draw()
+
+        // Update the player's position
         this.position.y += this.velocity.y
         this.position.x += this.velocity.x;
 
+        if (this.position.x + this.velocity.x > 0 && this.position.x + this.velocity.x + playerWidth < gameWidth) {
+            // Update the stars' positions
+            stars.forEach(star => {
+                star.position.x -= this.velocity.x;
+            });
+        }
+
+        // Update the stars' positions
+        stars.forEach((star, index) => {
+            star.position.x -= this.velocity.x;
+            console.log(`Position of star ${index}: (${star.position.x})`);
+            console.log(`player ${player.position.x}`)
+          });
+
+
+        // Apply gravity to the player
         if (this.position.y + this.height + this.velocity.y <= canvas.height) {
             this.velocity.y += playerGravity
         }
+
     }
 }
 
@@ -130,16 +149,23 @@ function init() {
         containsStar: false, // don't contain star
     }));
 
-    for (var i = 1; i < platformsWinNum; i++) {
+    for (var i = 1; i < platformsNum; i++) {
         platforms.push(new Platform({
-            x: i * 300,
+            x: 0,
+            y: 500,
+            imageSrc: '/uploads/grass.png',
+            width: 200,
+            containsStar: false, // don't contain star
+        }));
+
+        platforms.push(new Platform({
+            x: i * 400,
             y: Math.random() * (500 - 300) + 300,
             imageSrc: '/uploads/grass.png',
             width: Math.floor(Math.random() * 250) + 100,
             containsStar: true,
         }));
     }
-    console.log(platforms)
 
     player = new Player({
         x: 50,
@@ -158,12 +184,15 @@ function animate() {
     player.update()
 
 
+    if (keys.down.pressed && player.position.x < 200) {
+        player.velocity.x = player.speed;
 
-    if (keys.right.pressed && player.position.x < 200) {
-        player.velocity.x = player.speed
     } else {
-        player.velocity.x = 0
+        player.velocity.x = 0;
     }
+
+/*     player.update()
+ */
 
     if (keys.down.pressed && lives > 0) {
         scrollOffset += player.speed
@@ -171,6 +200,8 @@ function animate() {
             platform.position.x -= player.speed
         })
     }
+
+
 
     platforms.forEach(platform => {
         platform.draw();
@@ -185,30 +216,36 @@ function animate() {
 
                 if (platform.containsStar) {                //add if statement for player colliding with star
                     // Check for collision between player and star
+                    console.log(player.position.x)
+                    console.log(platform.starPosition)
 
-
-                        // Remove the star from the platform and the array, and increase the score
-                        platform.containsStar = false;
-                        stars.splice(stars.indexOf(star => star.position === platform.starPosition), 1);
-                        score++;
-                        scoreText.innerText = 'Score: ' + score;
-                    }
-                    console.log(stars)
-                
+                    // Remove the star from the platform and the array, and increase the score
+                    platform.containsStar = false;
+                    stars.splice(stars.indexOf(star => star.position === platform.starPosition), 1);
+                    score++;
+                    scoreText.innerText = 'Score: ' + score;
+                }
             } else {
                 player.velocity.y = -15;                    //bounce when player hits platform
             }
         }
     });
+}
 
 
 
 
-    if (score >= platformsWinNum) {
+
+function gameWon() {
+    if (score >= winNum) {
         console.log("congratttssss")
     }
+}
 
 
+
+
+function gameLost() {
     if (player.position.y > canvas.height) {
         lives--;
         livesText.innerText = 'Lives: ' + lives;
@@ -222,6 +259,7 @@ function animate() {
         }
     }
 }
+
 
 init()
 animate()

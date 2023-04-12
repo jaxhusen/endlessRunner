@@ -2,6 +2,12 @@
   margin: 0;
   padding: 0;
 }
+/* 
+canvas {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+} */
 
 #game {
   background-image: url(/uploads/bg.jpg);
