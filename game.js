@@ -12,7 +12,7 @@ var playerGravity = .5;
 var playerJump = -10
 var starHeight = 40;
 var starWidth = 40;
-var platformWidth = 200;
+var platformWidth = Math.floor(Math.random() * 200) + 100;
 var platformHeight = 50;
 var playerWidth = 50;
 var playerHeight = 50;
@@ -36,17 +36,17 @@ scoreText.innerText = 'Score: ' + score;
 livesText.innerText = 'Lives: ' + lives;
 
 class Platform {
-    constructor({ x, y, imageSrc }) {
+    constructor({ x, y, imageSrc, width, containsStar }) {
         this.position = {
             x: x,
             y: y
         };
-        this.width = platformWidth;
+        this.width = width; 
         this.height = platformHeight;
         this.image = new Image();
         this.image.src = imageSrc;
         this.jumpedOn = false;
-        this.containsStar = true;
+        this.containsStar = containsStar;
         this.starPosition = {
             x: this.position.x,
             y: this.position.y - starHeight
@@ -98,8 +98,6 @@ class Player {
             this.velocity.y += playerGravity
         }
     }
-
-
 }
 
 
@@ -127,7 +125,9 @@ function init() {
     platforms.push(new Platform({
         x: 0,
         y: 500,
-        imageSrc: '/uploads/grass.png'
+        imageSrc: '/uploads/grass.png',
+        width: 200,
+        containsStar: false, // don't contain star
     }));
 
     for (var i = 1; i < platformsWinNum; i++) {
@@ -135,8 +135,11 @@ function init() {
             x: i * 300,
             y: Math.random() * (500 - 300) + 300,
             imageSrc: '/uploads/grass.png',
+            width: Math.floor(Math.random() * 250) + 100,
+            containsStar: true,
         }));
     }
+    console.log(platforms)
 
     player = new Player({
         x: 50,
