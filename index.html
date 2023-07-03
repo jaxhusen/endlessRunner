@@ -10,16 +10,20 @@
 </head>
 
 <body>
-<div id="game">
-    <div id="containerLivesScore">
-        <div id="scoreText"></div>
-        <div id="livesText"></div>
+    <div id="game">
+        <div style="display: block;">
+            <div id="cc-title"></div>
+        </div>
+        <div id="containerLivesScore">
+            <div id="scoreText"></div>
+            <div id="livesText"></div>
+        </div>
+        <div id="containerStartGame">
+            <div id="startGame" onclick="play()"></div>
+        </div>
+        
     </div>
-    <canvas id="canvas"></canvas>
-</div>
-
-
-    <script src="game.js" type="module"></script>
+    <script src="game.js"></script>
 </body>
 
 </html>

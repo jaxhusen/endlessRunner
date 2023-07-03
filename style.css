@@ -2,17 +2,15 @@
   margin: 0;
   padding: 0;
 }
-/* 
-canvas {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-} */
 
 #game {
-  background-image: url(/uploads/bg.jpg);
+  background-image: url(/bg.jpg);
   background-repeat: repeat-x;
   background-size: cover;
+  width: var(--game-width);
+  height: var(--game-height);
+  overflow: hidden;
+  position: relative;
 }
 
 #containerLivesScore {
@@ -22,12 +20,35 @@ canvas {
   padding: 2%;
 }
 
+#containerStartGame{
+  display: flex;
+  flex-direction: row;
+  white-space: nowrap;
+  justify-content: center;
+  align-items: center;
+  margin-top: 40%;
+}
+
+#startGame {
+  display: flex;
+  justify-content: center; 
+  color: white;
+  background-color: rgba(0, 0, 0, 0.411);
+  padding: 2%;
+  width: 20%;
+  font-size: 18px;
+}
+
+#startGame:hover {
+  color: rgb(19, 216, 19);
+  cursor: pointer;
+}
+
 #scoreText {
   color: green;
   font-size: 20px;
   left: 0;
   z-index: 55;
-
 }
 
 #livesText {
@@ -38,21 +59,29 @@ canvas {
   z-index: 55;
 }
 
-#platforms{
+
+.platform {
   position: absolute;
-    bottom: 0;
-  width: 100px;
-  height: 50px;
-  background-image: url(/uploads/grass.png);
+  width: var(--platform-width);
+  height: var(--platform-height);
+  background-image: url(grass.png);
   background-repeat: no-repeat;
   background-size: cover;
+  overflow: hidden;
 }
 
-#star{
-  position: absolute;
-  width: 50px;
-  height: 50px;
-  background-image: url(/uploads/star.png);
-  background-repeat: no-repeat;
-  background-size: cover;
+.textEl{
+  white-space: nowrap;
+  color: white;
+  margin-top: -70px;
+}
+
+.player{
+  background-image: url(/player.png);
+}
+
+.goalFlag{
+  height: 20%;
+  width: 10%;
+  background-image: url(/goal.png);
 }

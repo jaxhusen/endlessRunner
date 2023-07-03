@@ -1,232 +1,403 @@
-window.addEventListener('resize', () => {
-    window.location.reload()
+window.addEventListener('resize', function() {
+    window.location.reload();
 }); //update size of game depending on size of screen
 
+function pointerDownHandler(event) {
+    playerObj.velocity.x += 1;
+    keys.down.pressed = true;
+}
+
+//from HTML
 const scoreText = document.getElementById('scoreText');
 const livesText = document.getElementById('livesText');
+const game = document.getElementById('game');
+const startGame = document.getElementById('startGame');
 
-const canvas = document.querySelector('canvas')
-const c = canvas.getContext('2d')
-
-var playerGravity = .5;
-var playerJump = -10
-var starHeight = 40;
-var starWidth = 40;
-var platformWidth = Math.floor(Math.random() * 200) + 100;
-var platformHeight = 50;
-var playerWidth = 50;
-var playerHeight = 50;
-
-var gameHeight = window.innerHeight;
-var gameWidth = window.innerWidth;
-canvas.width = gameWidth;
-canvas.height = gameHeight;
-
+//variables
 var score = 0;
 var lives = 1;
+var scrollOffset = 5;
+var playerGravity = .5;
+var playerJump = -10
+var player;
+var starHeight = 30;
+var starWidth = 30;
 
-var scrollOffset = 0;
-var scoreToWin = 1000;          //point to win if we use scrollOffset insted of platforms
+var minWidth = 30;
+var maxWidth = 150;
+var platformDist = Math.random() * (300 - 170) + 170;
 var platforms = [];
-var stars = [];                 // array to store star positions
-var platformsNum = 11;       //total number of platforms and points to win
-var winNum = platformsNum - 1;
+var stars = [];
+const numPlatforms = 10;
+const pointsToWin = 50;     // won when pointsToWin
+const collideWithStarPoint = 10;
+var platformsJumpedOn = 0;
+var onTheScreen = 30;
 
-scoreText.innerText = 'Score: ' + score;
-livesText.innerText = 'Lives: ' + lives;
+var lastStarHit = null;
+var jumpedOn = false;
+var containsStar = true;
+var onGround = true;
 
-class Platform {
-    constructor({ x, y, imageSrc, width, containsStar }) {
-        this.position = {
-            x: x,
-            y: y
-        };
-        this.width = width;
-        this.height = platformHeight;
-        this.image = new Image();
-        this.image.src = imageSrc;
-        this.jumpedOn = false;
-        this.containsStar = containsStar;
-        this.starPosition = {
-            x: this.position.x,
-            y: this.position.y - starHeight
-        };
-        this.starImage = new Image();
-        this.starImage.src = "/uploads/star.png";
-        if (this.containsStar) {
-            stars.push({
-                position: this.starPosition,
-                image: this.starImage,
-                height: starHeight,
-                width: starWidth
-            });
-        }
-    }
-    draw() {
-        c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
-        if (this.containsStar) {
-            c.drawImage(this.starImage, this.position.x + this.width / 2 - starWidth, this.position.y - starHeight * 2, starWidth, starHeight);
-        }
-    }
-}
+//variables for array 
+var scoreArr = [];          //save score 
 
 
 
-
-class Player {
-    constructor(position) {
-        this.position = position
-        this.velocity = {
-            x: 0,
-            y: 0
-        }
-        this.speed = 5
-        this.height = playerHeight
-        this.width = playerWidth
-    }
-    draw() {
-        c.fillStyle = 'green'
-        c.fillRect(this.position.x, this.position.y, this.width, this.height)
-    }
-
-    update() {
-        this.draw()
-
-        // Update the player's position
-        this.position.y += this.velocity.y
-        this.position.x += this.velocity.x;
-
-        if (this.position.x + this.velocity.x > 0 && this.position.x + this.velocity.x + playerWidth < gameWidth) {
-            // Update the stars' positions
-            stars.forEach(star => {
-                star.position.x -= this.velocity.x;
-            });
-        }
-
-        // Update the stars' positions
-        stars.forEach((star, index) => {
-            star.position.x -= this.velocity.x;
-            console.log(`Position of star ${index}: (${star.position.x})`);
-            console.log(`player ${player.position.x}`)
-          });
-
-
-        // Apply gravity to the player
-        if (this.position.y + this.height + this.velocity.y <= canvas.height) {
-            this.velocity.y += playerGravity
-        }
-
-    }
-}
-
-
-var player = new Player({
-    x: 50,
-    y: 0
-});
-
-
-const keys = {
-    right: {
-        pressed: false
+var playerObj = {
+    velocity: {
+        x: 0,
+        y: 0
     },
-    left: {
-        pressed: false
+    position: {
+        x: onTheScreen,
+        y: 0
     },
-    down: {
-        pressed: false
-    }
+    height: 30,
+    width: 30,
+    speed: 0.3
 };
 
+var platformObj = {
+    x: 0,
+    y: 500,
+    width: 100,
+    height: 30,
+    jumpedOn: false,
+    containsStar: true
+};
 
+var starObj = {
+    x: 50,
+    y: 0,
+    height: starHeight,
+    width: starWidth
+}
 
-function init() {
-    platforms.push(new Platform({
-        x: 0,
-        y: 500,
-        imageSrc: '/uploads/grass.png',
-        width: 200,
-        containsStar: false, // don't contain star
-    }));
+const keys = {
+    down: { pressed: false }
+};
 
-    for (var i = 1; i < platformsNum; i++) {
-        platforms.push(new Platform({
-            x: 0,
-            y: 500,
-            imageSrc: '/uploads/grass.png',
-            width: 200,
-            containsStar: false, // don't contain star
-        }));
+//set background
+var gameWidth = window.innerWidth;
+var gameHeight = window.innerHeight;
+game.style.width = gameWidth + 'px';
+game.style.height = gameHeight + 'px';
 
-        platforms.push(new Platform({
-            x: i * 400,
-            y: Math.random() * (500 - 300) + 300,
-            imageSrc: '/uploads/grass.png',
-            width: Math.floor(Math.random() * 250) + 100,
-            containsStar: true,
-        }));
-    }
+startGame.innerText = 'Start game';
 
-    player = new Player({
-        x: 50,
-        y: 0
-    });
-    scrollOffset = 0;
-    keys.down.pressed = false;
+function play() {
+
+    startGame.style.display = 'none';
+    scoreText.innerText = 'Score: ' + score;
+    livesText.innerText = 'Lives: ' + lives;
+
+    requestAnimationFrame(update);
+    generatePlatforms();
+    createPlayer();
 }
 
 
-function animate() {
-    window.requestAnimationFrame(animate)
-    c.clearRect(0, 0, gameWidth, gameHeight);       // Clear canvas
-    c.fillStyle = "lightblue"
+function update() {
+    // update player position
+    playerObj.position.y += playerObj.velocity.y;
+    playerObj.position.x += playerObj.velocity.x;
+    player.style.top = playerObj.position.y + 'px';
+    player.style.left = playerObj.position.x + 'px';
 
-    player.update()
+    if (playerObj.position.y + playerObj.height + playerObj.velocity.y <= gameHeight) {
+        playerObj.velocity.y += playerGravity
+    }
+
+    // constrain player position within game boundaries
+    if (playerObj.position.x < 0) {
+        playerObj.position.x = 0;
+    }
+
+    //gör att spelaren stannar på toppen
+    if (playerObj.position.y < 0) {
+        playerObj.position.y = 0;
+        playerObj.velocity.y = 0;
+    }
+
+    if (playerObj.position.y + player.offsetHeight > game.offsetHeight) {
+        // To remove the event listener
+        window.removeEventListener('pointerdown', pointerDownHandler);
+
+        livesText.innerText = 'Lives: ' + (lives--);
+        window.location.reload();
+        playerObj.velocity.y = playerObj;
+    }
 
 
-    if (keys.down.pressed && player.position.x < 200) {
-        player.velocity.x = player.speed;
-
+    if (keys.down.pressed && playerObj.position.x < onTheScreen) {
+        playerObj.velocity.x = playerObj.speed
     } else {
-        player.velocity.x = 0;
+        playerObj.velocity.x = 0
     }
 
-/*     player.update()
- */
-
+    //if press down then move player + background
     if (keys.down.pressed && lives > 0) {
-        scrollOffset += player.speed
-        platforms.forEach(platform => {
-            platform.position.x -= player.speed
-        })
+        if (score >= pointsToWin) {
+            scrollOffset = 0;
+            return;
+        }else{
+            scrollOffset += playerObj.speed;
+            platforms.forEach((platform, index) => {
+                // Get the corresponding platform element
+                const platformEl = document.getElementsByClassName('platform')[index];
+    
+                // Subtract the scrollOffset from the platform's x position
+                platform.x -= scrollOffset;
+                platformEl.style.left = platform.x + 'px';
+            });
+    
+            stars.forEach((star, index) => {
+                // Get the corresponding star element
+                const starEl = document.getElementsByClassName('star')[index];
+                star.x -= scrollOffset;
+                starEl.style.left = star.x + 'px';
+            });
+        }
     }
 
+    if (!keys.down.pressed) {
+        scrollOffset = 0;
+    }
+
+    // call requestAnimationFrame again to loop the animation
+    requestAnimationFrame(update);
+
+    // Generate a new platform on the right side
+    generatePlatforms();
+
+    // detect collisions
+    detectCollisions();
+}
+
+function createPlayer() {
+    player = document.createElement('img');
+    player.className = 'player';
+    player.style.width = playerObj.width + 'px';
+    player.style.height = playerObj.height + 'px';
+    //player.style.backgroundColor = 'green';
+    player.src = '/player.png';
+    player.style.position = 'absolute';
+    player.style.top = playerObj.position.y + 'px';
+    player.style.left = playerObj.position.x + 'px';
+
+    game.appendChild(player);
+
+    return player;
+}
 
 
-    platforms.forEach(platform => {
-        platform.draw();
-        if (player.position.y + player.height <= platform.position.y
-            && player.position.y + player.height + player.velocity.y >= platform.position.y &&
-            player.position.x + player.width >= platform.position.x && player.position.x <=
-            platform.position.x + platform.width) {
+function generatePlatforms() {
+    // Generate a new platform only if the number of platforms is less than numPlatforms
+    if (platforms.length < numPlatforms) {
+        // Generate a new platform only if the last platform is inside the gameWidth
+        const lastPlatform = platforms[platforms.length - 1];
+        if (lastPlatform && lastPlatform.x + lastPlatform.width + platformDist >= gameWidth) {
+            return;
+        }
 
-            if (!platform.jumpedOn) {
-                player.velocity.y = -15;                    //bounce when player hits platform
-                platform.jumpedOn = true;                   // mark platform as touched
+        const minY = gameHeight * 0.4;
+        const maxY = gameHeight * 0.6;
+        let newX = lastPlatform ? lastPlatform.x + platformDist : 0;
 
-                if (platform.containsStar) {                //add if statement for player colliding with star
-                    // Check for collision between player and star
-                    console.log(player.position.x)
-                    console.log(platform.starPosition)
+        newX = Math.min(newX, gameWidth); // new platform is inside the gameWidth
 
-                    // Remove the star from the platform and the array, and increase the score
-                    platform.containsStar = false;
-                    stars.splice(stars.indexOf(star => star.position === platform.starPosition), 1);
-                    score++;
-                    scoreText.innerText = 'Score: ' + score;
+        let newY = Math.random() * (maxY - minY) + minY;
+
+        // Determine whether the new platform should contain a star
+        const containsStar = platforms.length % 2 === 0;
+
+        // Ensure that the new platform is not stacked on top of the last platform
+        while (lastPlatform && Math.abs(newY - lastPlatform.y) < platformObj.height) {
+            newY = Math.random() * (maxY - minY) + minY;
+        }
+
+        const newPlatform = {
+            ...platformObj,
+            x: newX,
+            y: newY,
+            width: Math.random() * (maxWidth - minWidth) + minWidth,        // generate a new random width
+            containsStar: containsStar,
+            jumpedOn: false,
+        };
+
+        platforms.push(newPlatform);
+        if (platforms.length > numPlatforms) {
+            platforms.shift();
+            game.removeChild(game.firstChild);
+        }
+
+        const platformEl = document.createElement('div');
+        platformEl.className = 'platform';
+        platformEl.style.width = newPlatform.width + 'px';
+        platformEl.style.height = newPlatform.height + 'px';
+        platformEl.style.backgroundColor = 'brown';
+        platformEl.style.position = 'absolute';
+        platformEl.style.top = newPlatform.y + 'px';
+        platformEl.style.left = newPlatform.x + 'px';
+
+        game.appendChild(platformEl);
+
+        // Add a star to the platform if it should contain one
+        if (containsStar) {
+            const newStar = {
+                ...starObj,
+                x: Math.random() * ((newX) - (newX - 50)) + (newX),
+                y: Math.random() * ((newY + 50) - (newY)) + (newY - 50),
+                width: starWidth,
+                height: starHeight
+            };
+
+            stars.push(newStar);
+
+            const starEl = document.createElement('div');
+            starEl.className = 'star';
+            starEl.style.width = newStar.width + 'px';
+            starEl.style.height = newStar.height + 'px';
+            // starEl.style.backgroundColor = 'yellow';
+            starEl.style.position = 'absolute';
+            starEl.style.top = newStar.y - newStar.height * 2 + 'px';
+            starEl.style.left = newStar.x + 'px';
+            game.appendChild(starEl);
+
+            const imgEl = document.createElement('img');
+            imgEl.className = 'img';
+            imgEl.src = '/star.png';
+            imgEl.style.height = starHeight + 'px';
+            imgEl.style.width = starWidth + 'px';
+
+            starEl.appendChild(imgEl)
+
+
+            var animationSpin = imgEl.animate(
+                [
+                    { transform: 'rotateY(0deg)' },
+                    { transform: 'rotateY(360deg)' }
+                ],
+                {
+                    duration: 2000, // You can set the duration to any value, as it won't affect the animation.
+                    iterations: Infinity // This makes the animation repeat indefinitely.
                 }
-            } else {
-                player.velocity.y = -15;                    //bounce when player hits platform
+            );
+            imgEl.style.transformOrigin = "center";
+        }
+    }
+}
+
+
+function detectCollisions(platformEl) {
+    const playerTop = parseInt(playerObj.position.y);
+    const playerBottom = playerTop + playerObj.height;
+    const playerLeft = parseInt(playerObj.position.x);
+    const playerRight = playerLeft + playerObj.width;
+
+    platforms.forEach((platform) => {
+        const platformTop = parseInt(platform.y);
+        const platformBottom = platformTop - platformObj.height;
+        const platformLeft = parseInt(platform.x);
+        const platformRight = platformLeft + platform.width;
+
+
+        if (playerBottom >= platformTop &&
+            playerTop + playerObj.velocity.y >= platformBottom &&
+            playerRight >= platformLeft &&
+            playerLeft <= platformRight) {
+            if (!platform.jumpedOn) {
+                if (!onGround) {
+                    return;                     // ignore click if not on ground
+                } else if(onGround && playerBottom > platformTop + 20){
+                    return;
+                } else if (onGround) {
+                    onGround = true;
+                    playerObj.velocity.y = playerJump;
+                    platform.jumpedOn = true;
+                    platformsJumpedOn++;        // öka räknaren med 1
+                    scoreText.innerText = 'Score: ' + (++score);
+                    console.log(platformsJumpedOn)
+                }
+
+
+                if (platformsJumpedOn === numPlatforms && score >= pointsToWin) {
+                    document.getElementById('cc-title').innerText = 'Congratulations! You got: ' + score + '! YOU WIN!';
+                    //scoreArr.unshift(gameDone);
+                    scoreArr.unshift(score);
+
+                    playerObj.velocity.y = playerObj;
+                    playerObj.velocity.x = playerObj;
+
+                    // Check if player is on the final platform and set x-velocity to 0
+                    if (platform === platforms[platforms.length - 1]) {
+                        playerObj.velocity.x = 0;
+                        console.log("sista")
+                    }
+                    //gameDone();
+                }
+                if (platformsJumpedOn === numPlatforms && score < pointsToWin) {
+                    document.getElementById('cc-title').innerText = 'Game lost! You got: ' + score + '!!';
+                    playerObj.velocity.y = playerObj;
+                    playerObj.velocity.x = playerObj;
+
+                    if (platforms.length > 0 && platform === platforms[platforms.length - 1]) {
+                        playerObj.velocity.x = 0;
+                        console.log("sista");
+                    /* 
+                        const goalFlag = document.createElement('img');
+                        goalFlag.className = 'goalFlag';
+                        goalFlag.src = '/goal.png';
+                        goalFlag.style.height = starHeight + 'px';
+                        goalFlag.style.width = starWidth + 'px';
+                    
+                        platformEl.appendChild(goalFlag);  */// Append to platformEl instead of platform
+                    }
+                }
+            }
+            else {
+                playerObj.velocity.y = playerJump;
+            }
+        }
+    });
+
+
+    platforms.forEach((platform) => {
+        if (platform.containsStar) {
+            const starEl = document.querySelectorAll('.star');
+
+            starEl[0].style.display = 'none';
+
+            for (let i = 1; i < stars.length; i++) {
+                const star = stars[i];
+
+                if (playerObj.position.x < star.x + star.width &&
+                    playerObj.position.x + playerObj.width > star.x &&
+                    playerObj.position.y < star.y + star.height &&
+                    playerObj.position.y + playerObj.height > star.y) {
+                    if (star && lastStarHit !== star) {
+                        lastStarHit = star;
+                        platform.containsStar = false;
+                        scoreText.innerText = 'Score: ' + (score += collideWithStarPoint);
+                        starEl[i].innerText = '+ 10';
+                        starEl[i].style.color = 'white';
+
+                        // Animate the star element
+                        starEl[i].animate(
+                            [
+                                { transform: 'translateY(0px)', opacity: 1 },
+                                { transform: 'translateY(-100px)', opacity: 0 }
+                            ],
+                            {
+                                duration: 1000,
+                                easing: 'ease-out'
+                            }
+                        ).onfinish = () => {
+                            starEl[i].style.display = 'none';
+                        };
+                    }
+                }
             }
         }
     });
@@ -234,47 +405,23 @@ function animate() {
 
 
 
+window.addEventListener('pointerdown', pointerDownHandler);
 
-
-function gameWon() {
-    if (score >= winNum) {
-        console.log("congratttssss")
-    }
-}
-
-
-
-
-function gameLost() {
-    if (player.position.y > canvas.height) {
-        lives--;
-        livesText.innerText = 'Lives: ' + lives;
-        keys.down.pressed = false;
-        player.velocity.x = 0
-        if (lives > 0) {
-            init()
-        } else {
-            livesText.innerText = 'Lives: ' + 0;
-            console.log("G A M E O V E R, u scored " + score + ' points')
-        }
-    }
-}
-
-
-init()
-animate()
-
-window.addEventListener('pointerdown', (event) => {
-    player.velocity.x += 1
-    keys.down.pressed = true;
-})
-
-window.addEventListener('pointerup', (event) => {
-    player.velocity.x = 0
+window.addEventListener('dblclick', function (event) {
     keys.down.pressed = false;
-})
+});
 
-window.addEventListener('touch', (event) => {
-    player.velocity.x += 1
+window.addEventListener('pointerup', function (event) {
+    playerObj.velocity.x = 0;
+    keys.down.pressed = false;
+});
+
+window.addEventListener('touchstart', function (event) {
+    playerObj.velocity.x += 1;
     keys.down.pressed = true;
-})
+});
+
+window.addEventListener('touchend', function (event) {
+    playerObj.velocity.x = 0;
+    keys.down.pressed = false;
+});
